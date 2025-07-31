@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatPriv - Privacy-First Communication</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #0084ff;
+            --secondary-color: #f0f2f5;
+            --text-color: #1c1e21;
+            --bg-color: #ffffff;
+            --sidebar-bg: #f8f9fa;
+            --border-color: #e4e6ea;
+            --success-color: #42b883;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+
+        [data-theme="dark"] {
+            --text-color: #e4e6ea;
+            --bg-color: #18191a;
+            --sidebar-bg: #242526;
+            --secondary-color: #3a3b3c;
+            --border-color: #3e4042;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Auth Screens */
+        .auth-screen {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 100%);
+            padding: 20px;
+        }
+
+        .auth-screen.active {
+            display: flex;
+        }
+
+        .auth-card {
+            background: var(--bg-color);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #0066cc;
+            transform: translateY(-1px);
+        }
+
+        .auth-switch {
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .auth-switch a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-color);
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .menu-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .search-bar {
+            flex: 1;
+            margin: 0 15px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chat-item:hover, .chat-item.active {
+            background: var(--secondary-color);
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .chat-info {
+            flex: 1;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .chat-preview {
+            color: #666;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-meta {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Main Chat Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-color);
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-info .avatar {
+            margin-right: 12px;
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+
+        .chat-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .chat-subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: background 0.3s;
+        }
+
+        .action-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--bg-color);
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            max-width: 70%;
+        }
+
+        .message.sent {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .message.received {
+            margin-right: auto;
+        }
+
+        .message-content {
+            background: var(--secondary-color);
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .message.sent .message-content {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message.received .message-time {
+            text-align: left;
+        }
+
+        /* Message Input */
+        .message-input-container {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
+        }
+
+        .message-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .attachment-btn, .voice-btn {
+            background: none;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: background 0.3s;
+        }
+
+        .attachment-btn:hover, .voice-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .message-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .send-btn {
+            background: var(--primary-color);
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #0066cc;
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 20px rgba(0, 132, 255, 0.4);
+        }
+
+        /* Side Menu */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            transition: left 0.3s ease;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .side-menu.open {
+            left: 0;
+        }
+
+        .side-menu-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .user-id {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .menu-items {
+            padding: 10px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            color: var(--text-color);
+        }
+
+        .menu-item:hover {
+            background: var(--secondary-color);
+        }
+
+        .menu-item-icon {
+            width: 24px;
+            margin-right: 15px;
+            text-align: center;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-color);
+            border-radius: var(--radius);
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            z-index: 1002;
+            display: none;
+            box-shadow: var(--shadow);
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-icon {
+            font-size: 80px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .welcome-text {
+            color: #666;
+            font-size: 16px;
+            max-width: 400px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -320px;
+                z-index: 1001;
+                height: 100vh;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: background 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="auth-screen active">
+        <div class="auth-card">
+            <div class="logo">ChatPriv</div>
+            <p class="tagline">Privacy-first communication</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+            </form>
+            
+            <div class="auth-switch">
+                Don't have an account? <a href="#" id="showRegister">Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Screen -->
+    <div id="registerScreen" class="auth-screen">
+        <div class="auth-card">
+            <div class="logo">ChatPriv</div>
+            <p class="tagline">Join the privacy revolution</p>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="registerUsername" placeholder="Choose a username" required>
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" id="registerDisplayName" placeholder="Your display name" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password" required>
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+            
+            <div class="auth-switch">
+                Already have an account? <a href="#" id="showLogin">Sign in</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="app-container hidden">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="menu-btn" id="menuBtn">☰</button>
+                <div class="search-bar">
+                    <input type="text" placeholder="Search chats..." id="searchInput">
+                    <button class="search-btn">🔍</button>
+                </div>
+                <button class="theme-toggle" id="themeToggle">🌙</button>
+            </div>
+            
+            <div class="chat-list" id="chatList">
+                <!-- Sample chats -->
+                <div class="chat-item active" data-chat-id="1">
+                    <div class="avatar">JD</div>
+                    <div class="chat-info">
+                        <div class="chat-name">John Doe</div>
+                        <div class="chat-preview">Hey, how are you doing?</div>
+                    </div>
+                    <div class="chat-meta">
+                        <div>2:30 PM</div>
+                    </div>
+                </div>
+                
+                <div class="chat-item" data-chat-id="2">
+                    <div class="avatar">TG</div>
+                    <div class="chat-info">
+                        <div class="chat-name">Tech Group</div>
+                        <div class="chat-preview">Alice: Check out this new framework!</div>
+                    </div>
+                    <div class="chat-meta">
+                        <div>1:15 PM</div>
+                        <div style="background: var(--primary-color); color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; margin-top: 2px;">3</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <div class="avatar">JD</div>
+                    <div>
+                        <div class="chat-title">John Doe</div>
+                        <div class="chat-subtitle">@johndoe #12345</div>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="action-btn" title="Voice Call">📞</button>
+                    <button class="action-btn" title="More">⋯</button>
+                </div>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+                <div class="message received">
+                    <div class="message-content">
+                        Hey there! How are you doing today?
+                        <div class="message-time">2:25 PM</div>
+                    </div>
+                </div>
+                
+                <div class="message sent">
+                    <div class="message-content">
+                        I'm doing great! Just working on some new projects. How about you?
+                        <div class="message-time">2:28 PM</div>
+                    </div>
+                </div>
+                
+                <div class="message received">
+                    <div class="message-content">
+                        That's awesome! I'd love to hear more about your projects.
+                        <div class="message-time">2:30 PM</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="message-input-container">
+                <div class="message-input">
+                    <button class="attachment-btn">📎</button>
+                    <input type="text" placeholder="Type a message..." id="messageInput">
+                    <button class="voice-btn">🎤</button>
+                    <button class="send-btn" id="sendBtn">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Side Menu -->
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-header">
+            <div class="user-avatar">U</div>
+            <div class="user-name" id="userDisplayName">User Name</div>
+            <div class="user-id" id="userIdDisplay">#00001</div>
+        </div>
+        
+        <div class="menu-items">
+            <button class="menu-item" id="profileBtn">
+                <span class="menu-item-icon">👤</span>
+                Profile
+            </button>
+            <button class="menu-item" id="newGroupBtn">
+                <span class="menu-item-icon">👥</span>
+                New Group
+            </button>
+            <button class="menu-item" id="newChatBtn">
+                <span class="menu-item-icon">💬</span>
+                New Chat
+            </button>
+            <button class="menu-item" id="callHistoryBtn">
+                <span class="menu-item-icon">📞</span>
+                Call History
+            </button>
+            <button class="menu-item" id="settingsBtn">
+                <span class="menu-item-icon">⚙️</span>
+                Settings
+            </button>
+            <button class="menu-item" id="logoutBtn">
+                <span class="menu-item-icon">🚪</span>
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab" id="fab" title="New Group">+</button>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Modals -->
+    <div class="modal" id="newGroupModal">
+        <div class="modal-header">
+            <h3 class="modal-title">Create New Group</h3>
+            <button class="close-btn" data-modal="newGroupModal">×</button>
+        </div>
+        <form id="newGroupForm">
+            <div class="form-group">
+                <label>Group Name</label>
+                <input type="text" id="groupName" placeholder="Enter group name" required>
+            </div>
+            <div class="form-group">
+                <label>Description (Optional)</label>
+                <input type="text" id="groupDescription" placeholder="Group description">
+            </div>
+            <button type="submit" class="btn-primary">Create Group</button>
+        </form>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-header">
+            <h3 class="modal-title">Settings</h3>
+            <button class="close-btn" data-modal="settingsModal">×</button>
+        </div>
+        <div class="menu-items">
+            <button class="menu-item">
+                <span class="menu-item-icon">👤</span>
+                Account Settings
+            </button>
+            <button class="menu-item">
+                <span class="menu-item-icon">🔒</span>
+                Privacy Settings
+            </button>
+            <button class="menu-item">
+                <span class="menu-item-icon">🔔</span>
+                Notifications
+            </button>
+            <button class="menu-item">
+                <span class="menu-item-icon">🎨</span>
+                Appearance & Language
+            </button>
+            <button class="menu-item">
+                <span class="menu-item-icon">💬</span>
+                Message Control
+            </button>
+            <button class="menu-item">
+                <span class="menu-item-icon">📱</span>
+                Sessions
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // App State
+        let currentUser = null;
+        let currentChat = null;
+        let chats = {};
+        let groups = {};
+        let isDarkMode = false;
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const registerScreen = document.getElementById('registerScreen');
+        const mainApp = document.getElementById('mainApp');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+        const messageInput = document.getElementById('messageInput');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const chatList = document.getElementById('chatList');
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+            loadSampleData();
+        });
+
+        function initializeApp() {
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            }
+
+            // Load theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                toggleTheme();
+            }
+        }
+
+        function setupEventListeners() {
+            // Auth form handlers
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            document.getElementById('showRegister').addEventListener('click', () => showScreen('registerScreen'));
+            document.getElementById('showLogin').addEventListener('click', () => showScreen('loginScreen'));
+
+            // Menu handlers
+            document.getElementById('menuBtn').addEventListener('click', toggleSideMenu);
+            document.getElementById('fab').addEventListener('click', () => openModal('newGroupModal'));
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Side menu handlers
+            document.getElementById('newGroupBtn').addEventListener('click', () => {
+                closeSideMenu();
+                openModal('newGroupModal');
+            });
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                closeSideMenu();
+                openModal('settingsModal');
+            });
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+            // Message input handlers
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Modal handlers
+            document.querySelectorAll('.close-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    closeModal(this.dataset.modal);
+                });
+            });
+
+            // Overlay handler
+            overlay.addEventListener('click', function() {
+                closeSideMenu();
+                closeAllModals();
+            });
+
+            // New group form
+            document.getElementById('newGroupForm').addEventListener('submit', createGroup);
+
+            // Chat selection
+            chatList.addEventListener('click', function(e) {
+                const chatItem = e.target.closest('.chat-item');
+                if (chatItem) {
+                    selectChat(chatItem.dataset.chatId);
+                }
+            });
+
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            // Simple validation (in real app, this would be server-side)
+            if (email && password) {
+                currentUser = {
+                    id: generateUserId(),
+                    email: email,
+                    username: email.split('@')[0],
+                    displayName: email.split('@')[0],
+                    avatar: email.charAt(0).toUpperCase()
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showMainApp();
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const username = document.getElementById('registerUsername').value;
+            const displayName = document.
